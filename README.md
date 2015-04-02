@@ -1,7 +1,7 @@
 Render
 ======
 Developed just for fun.<br />
-If i don't have what to do, MAYBE I develop mor features for it.
+If I don't have what to do, MAYBE I develop more features for it.
 
 ##Example
 ```js
