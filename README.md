@@ -26,3 +26,9 @@ And the HTML
     ${status}
 </div>
 ```
+
+Result:
+```
+Gabriel, 16
+Online
+```
