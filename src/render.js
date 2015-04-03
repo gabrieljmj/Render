@@ -67,11 +67,10 @@ Element.prototype.getVar = function (varName) {
     }
 }
 
-
 /**
  * This will render your HTML with the specified changes
  */
-function Render() {
+function Render () {
     this.elements = [];
 }
 
@@ -234,3 +233,5 @@ Render.prototype.render = function () {
         el.innerHTML = content;
     }
 }
+
+render = new Render();
