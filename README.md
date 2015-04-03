@@ -11,8 +11,6 @@ If I don't have what to do, MAYBE I develop more features for it.
 
 ##Example
 ```js
-var render = new Render();
-
 render
     .element('user')
         .setVar('name', 'Gabriel')
