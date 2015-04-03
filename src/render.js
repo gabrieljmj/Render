@@ -4,7 +4,7 @@
  *
  * @param string id
  */
-function Element (id) {
+var Element = function (id) {
     this.id = id;
     this.vars = [];
 }
@@ -68,9 +68,86 @@ Element.prototype.getVar = function (varName) {
 }
 
 /**
+ * Pharser tools
+ */
+var Parser = function () {
+}
+
+/**
+ * Returns the vars of certain code piece
+ *
+ * @param string content
+ *
+ * @return object
+ */
+Parser.prototype.getVarsFromContent = function (content) {
+    var regexp = /\${([a-zA-Z0-9._\.]+)}/g;
+    var result = [];
+
+    while ((vars = regexp.exec(content)) != null) {
+        result.push(vars[1]);
+    }
+
+    return result;
+}
+
+/**
+ * Parser for element
+ *
+ * @param Element element
+ */
+var ElementParser = function (element) {
+    this.element = element;
+}
+
+/**
+ * Extends Parser
+ */
+ElementParser.prototype = new Parser();
+
+/**
+ * Returns the foreaches of certain element
+ *
+ * @return object
+ */
+ElementParser.prototype.getLists = function () {
+    var regexpForCatchListUsedVar = /\$foreach\(([a-zA-Z0-9. ]+)\)\{\s.*\s+\}/g;
+    var regexpForCatchInside = /\$foreach\(.*\)\{(\s+.*\s+)\}/g;
+    var regexpForCatchCompleteLists = /(\$foreach\(.*\)\{\s.*\s+\})/g;
+    var content = document.getElementById(this.element.getId()).innerHTML;
+    var lists = [];
+
+    while((names = regexpForCatchCompleteLists.exec(content)) !== null) {
+        var list = names[1];
+        var listArray = regexpForCatchListUsedVar.exec(list);
+        listArray = listArray[1];
+        var usedVar = listArray.split(' as ');
+        listArray = usedVar[0];
+        usedVar = usedVar[usedVar.length - 1];
+        var listContent = regexpForCatchInside.exec(list);
+        listContent = listContent[1];
+        var data = {array: listArray, var: usedVar, content: listContent, complete: list};
+
+        lists.push(data);
+    }
+
+    return lists;
+}
+
+/**
+ * Returns all variables of certain element according to it ID
+ *
+ * @return object
+ */
+ElementParser.prototype.getVars = function () {
+    return this.getVarsFromContent(document.getElementById(this.element.getId()).innerHTML);
+}
+
+
+/**
  * This will render your HTML with the specified changes
  */
-function Render () {
+var Render = function () {
     this.elements = [];
 }
 
@@ -108,48 +185,6 @@ Render.prototype.setVar = function (name, value) {
 }
 
 /**
- * Returns all variables of certain element according to it ID
- *
- * @param string id
- *
- * @return object
- */
-Render.prototype.getVars = function (id) {
-    return this.getVarsFromContent(document.getElementById(id).innerHTML);
-}
-
-/**
- * Returns the foreaches of certain element
- *
- * @param string id
- *
- * @return object
- */
-Render.prototype.getLists = function (id) {
-    var regexpForCatchListUsedVar = /\$foreach\(([a-zA-Z0-9. ]+)\)\{\s.*\s+\}/g;
-    var regexpForCatchInside = /\$foreach\(.*\)\{(\s+.*\s+)\}/g;
-    var regexpForCatchCompleteLists = /(\$foreach\(.*\)\{\s.*\s+\})/g;
-    var content = document.getElementById(id).innerHTML;
-    var lists = [];
-
-    while((names = regexpForCatchCompleteLists.exec(content)) !== null) {
-        var list = names[1];
-        var listArray = regexpForCatchListUsedVar.exec(list);
-        listArray = listArray[1];
-        var usedVar = listArray.split(' as ');
-        listArray = usedVar[0];
-        usedVar = usedVar[usedVar.length - 1];
-        var listContent = regexpForCatchInside.exec(list);
-        listContent = listContent[1];
-        var data = {array: listArray, var: usedVar, content: listContent, complete: list};
-
-        lists.push(data);
-    }
-
-    return lists;
-}
-
-/**
  * Returns the value of some variable of an element
  *
  * @param string elementId
@@ -166,39 +201,22 @@ Render.prototype.getVar = function (elementId, varName) {
 }
 
 /**
- * Returns the vars of certain code piece
- *
- * @param string content
- *
- * @return object
- */
-Render.prototype.getVarsFromContent = function (content) {
-    var regexp = /\${([a-zA-Z0-9._\.]+)}/g;
-    var result = [];
-
-    while ((vars = regexp.exec(content)) != null) {
-        result.push(vars[1]);
-    }
-
-    return result;
-}
-
-/**
  * Renders the variables, changes their values on browser
  */
 Render.prototype.render = function () {
     for (var k in this.elements) {
         var element = this.elements[k];
-        var vars    = this.getVars(element.getId());
+        var parser = new ElementParser(element);
+        var vars    = parser.getVars(element.getId());
         var elementV = element.getVars();
-        var lists   = this.getLists(element.getId());
+        var lists   = parser.getLists(element.getId());
         var el      = document.getElementById(element.getId());
         var content = el.innerHTML;
         var elVars  = element.getVars();
         var contentList = [];
 
         for (var l in lists) {
-            var contentVars = this.getVarsFromContent(lists[l].content);
+            var contentVars = parser.getVarsFromContent(lists[l].content);
             for (var y in elementV) {
                 if (lists[l].array === elementV[y].name) {
                     for (var v in contentVars) {
