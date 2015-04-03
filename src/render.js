@@ -1,8 +1,20 @@
+/**
+ * An element is an HTML element generally
+ *  indicated by it ID
+ *
+ * @param string id
+ */
 function Element (id) {
     this.id = id;
     this.vars = [];
 }
 
+/**
+ * Sets a variable inside an element
+ *
+ * @param string name
+ * @param mixed  value
+ */
 Element.prototype.setVar = function (name, value) {
     if (!this.vars.length) {
         this.vars.push({name: name, value: value});
@@ -22,14 +34,31 @@ Element.prototype.setVar = function (name, value) {
     }
 }
 
+/**
+ * Returns the element ID
+ *
+ * @return string
+ */
 Element.prototype.getId = function () {
     return this.id;
 }
 
+/**
+ * Returns the element variables
+ *
+ * @return object
+ */
 Element.prototype.getVars = function () {
     return this.vars;
 }
 
+/**
+ * Returns the value of a variable
+ *
+ * @param string varName
+ *
+ * @return mixed
+ */
 Element.prototype.getVar = function (varName) {
     for (var k in this.vars) {
         if (this.vars[k].name === varName) {
@@ -39,11 +68,20 @@ Element.prototype.getVar = function (varName) {
 }
 
 
-
+/**
+ * This will render your HTML with the specified changes
+ */
 function Render() {
     this.elements = [];
 }
 
+/**
+ * Indicates an element to work, setting variables
+ *
+ * @param string id
+ *
+ * @return Render
+ */
 Render.prototype.element = function (id) {
     this.elements.push(new Element(id));
     this.currentElement = id;
@@ -51,6 +89,14 @@ Render.prototype.element = function (id) {
     return this;
 }
 
+/**
+ * Sets a variable for the element wich are working on
+ *
+ * @param string name
+ * @param mixed  value
+ *
+ * @return Render
+ */
 Render.prototype.setVar = function (name, value) {
     for (var k in this.elements) {
         if (this.elements[k].getId() === this.currentElement) {
@@ -62,10 +108,24 @@ Render.prototype.setVar = function (name, value) {
     return this;
 }
 
+/**
+ * Returns all variables of certain element according to it ID
+ *
+ * @param string id
+ *
+ * @return object
+ */
 Render.prototype.getVars = function (id) {
     return this.getVarsFromContent(document.getElementById(id).innerHTML);
 }
 
+/**
+ * Returns the foreaches of certain element
+ *
+ * @param string id
+ *
+ * @return object
+ */
 Render.prototype.getLists = function (id) {
     var regexpForCatchListUsedVar = /\$foreach\(([a-zA-Z0-9. ]+)\)\{\s.*\s+\}/g;
     var regexpForCatchInside = /\$foreach\(.*\)\{(\s+.*\s+)\}/g;
@@ -90,6 +150,14 @@ Render.prototype.getLists = function (id) {
     return lists;
 }
 
+/**
+ * Returns the value of some variable of an element
+ *
+ * @param string elementId
+ * @param string varName
+ *
+ * @return mixed
+ */
 Render.prototype.getVar = function (elementId, varName) {
     for (var k in this.elements) {
         if (this.elements[k].getId() === elementId) {
@@ -98,6 +166,13 @@ Render.prototype.getVar = function (elementId, varName) {
     }
 }
 
+/**
+ * Returns the vars of certain code piece
+ *
+ * @param string content
+ *
+ * @return object
+ */
 Render.prototype.getVarsFromContent = function (content) {
     var regexp = /\${([a-zA-Z0-9._\.]+)}/g;
     var result = [];
@@ -109,6 +184,9 @@ Render.prototype.getVarsFromContent = function (content) {
     return result;
 }
 
+/**
+ * Renders the variables, changes their values on browser
+ */
 Render.prototype.render = function () {
     for (var k in this.elements) {
         var element = this.elements[k];
