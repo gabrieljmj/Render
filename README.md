@@ -1,7 +1,13 @@
 Render
 ======
+Very simple template engine.
 Developed just for fun.<br />
 If I don't have what to do, MAYBE I develop more features for it.
+
+## Including
+```html
+<script src="https://raw.githubusercontent.com/GabrielJMJ/Render/master/src/render.min.js"></script>
+```
 
 ##Example
 ```js
