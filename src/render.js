@@ -207,7 +207,6 @@ Render.prototype.render = function () {
     for (var k in this.elements) {
         var element = this.elements[k];
         var parser = new ElementParser(element);
-        var vars    = parser.getVars(element.getId());
         var elementV = element.getVars();
         var lists   = parser.getLists(element.getId());
         var el      = document.getElementById(element.getId());
@@ -217,29 +216,44 @@ Render.prototype.render = function () {
 
         for (var l in lists) {
             var contentVars = parser.getVarsFromContent(lists[l].content);
+            var toReplace = [];
+            var toPut = [];
+            var i = 0;
             for (var y in elementV) {
                 if (lists[l].array === elementV[y].name) {
-                    for (var v in contentVars) {
-                        var objVarSplit = contentVars[v].split('.');
-                        objVar = objVarSplit[0];
+                    var listArr = this.getVar(element.getId(), lists[l].array);
+                    var cContent = lists[l].content;
+                    var currentVar = lists[l].var;
+                    var currentContent = [];
 
-                        if (objVar === lists[l].var) {
-                            var listArr = this.getVar(element.getId(), lists[l].array);
-                            originalObj = objVarSplit.join('.');
-                            for (var lv in listArr) {
-                                var newObjVar = objVarSplit;
-                                newObjVar[0] = 'listArr[lv]';
-                                var obj = newObjVar.join('.');
-                                contentList.push(lists[l].content.replace('${' + originalObj + '}', eval(obj)));
+                    for (var i = 0; i < contentVars.length; i++) {
+                        
+                        if (contentVars[i].split('.')[0] == currentVar) {
+                            for (var n = 0; n < listArr.length; n++) {
+                                var realObj = contentVars[i].split('.');
+                                realObj[0] = 'listArr[n]';
+                                if (typeof currentContent[n] !== 'undefined') {
+                                    currentContent[n] = currentContent[n].replace(
+                                        '${' + contentVars[i] + '}',
+                                        eval(realObj.join('.'))
+                                    );
+                                } else {
+                                    currentContent[n] = cContent.replace(
+                                        '${' + contentVars[i] + '}',
+                                        eval(realObj.join('.'))
+                                    );
+                                }
                             }
                         }
                     }
                 }
             }
 
-            content = content.replace(lists[l].complete, contentList.join(''));
+            content = content.replace(lists[l].complete, currentContent.join(''));
         }
-        
+
+        var vars = parser.getVarsFromContent(content);
+
         for (var z in elVars) {
             for (var y in vars) {
                 if (vars[y] === elVars[z].name){
