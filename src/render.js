@@ -1,4 +1,64 @@
 /**
+ * GabrielJMJ\Render
+ *
+ * @license MIT License
+ * @author Gabriel Jacinto aka. GabrielJMJ <gamjj74@hotmail.com>
+*/
+
+/**
+ * Collection for variables
+ */
+var VarsCollection = function () {
+    this.vars = [];
+}
+
+/**
+ * Sets a variable
+ *
+ * @param string name
+ * @param mixed  value
+ */
+VarsCollection.prototype.setVar = function (name, value) {
+    this.vars[name] = value;
+}
+
+/**
+ * Check if the collection has a variable
+ *
+ * @return boolean
+ */
+VarsCollection.prototype.hasVar = function (name) {
+     for (var k in this.vars) {
+        if (k == name) {
+            return true;
+        }
+     }
+
+    return false;
+}
+
+/**
+ * Returns the collection variables
+ *
+ * @return object
+ */
+VarsCollection.prototype.getVars = function () {
+    return this.vars;
+}
+
+/**
+ * Returns the value of some variable
+ *
+ * @param string name
+ *
+ * @return mixed
+ */
+VarsCollection.prototype.getVar = function (name) {
+    return this.vars[name];
+}
+
+
+/**
  * An element is an HTML element generally
  *  indicated by it ID
  *
@@ -6,33 +66,12 @@
  */
 var Element = function (id) {
     this.id = id;
-    this.vars = [];
 }
 
 /**
- * Sets a variable inside an element
- *
- * @param string name
- * @param mixed  value
+ * Extend the vars collection
  */
-Element.prototype.setVar = function (name, value) {
-    if (!this.vars.length) {
-        this.vars.push({name: name, value: value});
-    } else {
-        var exists = false;
-
-        for (var k in this.vars) {
-            if (this.vars[k].name === name) {
-                this.vars[k].value = value;
-                exists = true;
-            }
-        }
-
-        if (!exists) {
-            this.vars.push({name: name, value: value});
-        }
-    }
-}
+Element.prototype = new VarsCollection();
 
 /**
  * Returns the element ID
@@ -41,30 +80,6 @@ Element.prototype.setVar = function (name, value) {
  */
 Element.prototype.getId = function () {
     return this.id;
-}
-
-/**
- * Returns the element variables
- *
- * @return object
- */
-Element.prototype.getVars = function () {
-    return this.vars;
-}
-
-/**
- * Returns the value of a variable
- *
- * @param string varName
- *
- * @return mixed
- */
-Element.prototype.getVar = function (varName) {
-    for (var k in this.vars) {
-        if (this.vars[k].name === varName) {
-            return this.vars[k].value;
-        }
-    }
 }
 
 /**
@@ -149,6 +164,7 @@ ElementParser.prototype.getVars = function () {
  */
 var Render = function () {
     this.elements = [];
+    this.globalVars = new VarsCollection();
 }
 
 /**
@@ -161,6 +177,18 @@ var Render = function () {
 Render.prototype.element = function (id) {
     this.elements.push(new Element(id));
     this.currentElement = id;
+    this.currentGlobal = false;
+
+    return this;
+}
+
+/**
+ * Sets something for all file
+ *
+ * @return Render
+ */
+Render.prototype.global = function () {
+    this.currentGlobal = true;
 
     return this;
 }
@@ -174,10 +202,14 @@ Render.prototype.element = function (id) {
  * @return Render
  */
 Render.prototype.setVar = function (name, value) {
-    for (var k in this.elements) {
-        if (this.elements[k].getId() === this.currentElement) {
-            this.elements[k].setVar(name, value);
-            this.elements[k] = this.elements[k];
+    if (this.currentGlobal) {
+        this.globalVars.setVar(name, value);
+    } else {
+        for (var k in this.elements) {
+            if (this.elements[k].getId() === this.currentElement) {
+                this.elements[k].setVar(name, value);
+                this.elements[k] = this.elements[k];
+            }
         }
     }
 
@@ -204,6 +236,7 @@ Render.prototype.getVar = function (elementId, varName) {
  * Renders the variables, changes their values on browser
  */
 Render.prototype.render = function () {
+    var htmls = [];
     for (var k in this.elements) {
         var element = this.elements[k];
         var parser = new ElementParser(element);
@@ -211,25 +244,39 @@ Render.prototype.render = function () {
         var lists   = parser.getLists(element.getId());
         var el      = document.getElementById(element.getId());
         var content = el.innerHTML;
-        var elVars  = element.getVars();
         var contentList = [];
 
         for (var l in lists) {
-            var contentVars = parser.getVarsFromContent(lists[l].content);
+            content = this.getListContent(lists[l]);
+        }
+
+        var vars = parser.getVarsFromContent(content);
+
+        for (var y in vars) {
+            if (element.hasVar(vars[y])){
+                content = content.replace('${' + vars[y] + '}', element.getVar(vars[y]));
+            } else if (this.globalVars.hasVar(vars[y])) {
+                content = content.replace('${' + vars[y] + '}', this.globalVars.getVar(vars[y]));
+            }
+        }
+
+        el.innerHTML = content;
+
+        this.getListContent = function (list) {
+            var contentVars = parser.getVarsFromContent(list.content);
             var toReplace = [];
             var toPut = [];
             var i = 0;
             for (var y in elementV) {
-                if (lists[l].array === elementV[y].name) {
-                    var listArr = this.getVar(element.getId(), lists[l].array);
-                    var cContent = lists[l].content;
-                    var currentVar = lists[l].var;
+                if (list.array === y) {
+                    var listArr = this.getVar(element.getId(), list.array);
+                    var cContent = list.content;
+                    var currentVar = list.var;
                     var currentContent = [];
 
-                    for (var i = 0; i < contentVars.length; i++) {
-                        
+                    for (var i = 0, length = contentVars.length; i < length; i++) {
                         if (contentVars[i].split('.')[0] == currentVar) {
-                            for (var n = 0; n < listArr.length; n++) {
+                            for (var n = 0, lLength = listArr.length; n < lLength; n++) {
                                 var realObj = contentVars[i].split('.');
                                 realObj[0] = 'listArr[n]';
                                 if (typeof currentContent[n] !== 'undefined') {
@@ -249,21 +296,22 @@ Render.prototype.render = function () {
                 }
             }
 
-            content = content.replace(lists[l].complete, currentContent.join(''));
+            return content.replace(list.complete, currentContent.join(''));
         }
-
-        var vars = parser.getVarsFromContent(content);
-
-        for (var z in elVars) {
-            for (var y in vars) {
-                if (vars[y] === elVars[z].name){
-                    content = content.replace('${' + vars[y] + '}', elVars[z].value);
-                } 
-            }
-        }
-
-        el.innerHTML = content;
     }
+
+    var parser = new Parser();
+    var body = document.body;
+    var bodyContent = body.innerHTML;
+    var varsFromBody = parser.getVarsFromContent(bodyContent);
+
+    for (var v in varsFromBody) {
+        if (this.globalVars.hasVar(varsFromBody[v])) {
+            bodyContent = bodyContent.replace('${' + varsFromBody[v] + '}', this.globalVars.getVar(varsFromBody[v]));
+        }
+    }
+
+    body.innerHTML = bodyContent;
 }
 
 render = new Render();

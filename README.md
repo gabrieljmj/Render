@@ -12,6 +12,8 @@ If I don't have what to do, MAYBE I develop more features for it.
 ##Example
 ```js
 render
+    .global()
+        .setVar('title', 'My page')
     .element('user')
         .setVar('name', 'Gabriel')
         .setVar('age',  16)
@@ -22,6 +24,10 @@ render
 
 And the HTML
 ```html
+<header>
+    <h1>${title}</h1>
+</header>
+
 <div id="user">
     ${name}, ${age}
 </div>
