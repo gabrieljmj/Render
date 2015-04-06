@@ -39,6 +39,7 @@ And the HTML
 
 Result:
 ```
+# My Page
 Gabriel, 16
 Online
 ```
