@@ -232,6 +232,20 @@ Render.prototype.getVar = function (elementId, varName) {
     }
 }
 
+Render.prototype.setFromCodeParts = function (part) {
+    var parser = new Parser();
+    var partContent = part.innerHTML;
+    var varsFromPart = parser.getVarsFromContent(partContent);
+
+    for (var v in varsFromPart) {
+        if (this.globalVars.hasVar(varsFromPart[v])) {
+            partContent = partContent.replace('${' + varsFromPart[v] + '}', this.globalVars.getVar(varsFromPart[v]));
+        }
+    }
+
+    part.innerHTML = partContent;
+}
+
 /**
  * Renders the variables, changes their values on browser
  */
@@ -300,18 +314,8 @@ Render.prototype.render = function () {
         }
     }
 
-    var parser = new Parser();
-    var body = document.body;
-    var bodyContent = body.innerHTML;
-    var varsFromBody = parser.getVarsFromContent(bodyContent);
-
-    for (var v in varsFromBody) {
-        if (this.globalVars.hasVar(varsFromBody[v])) {
-            bodyContent = bodyContent.replace('${' + varsFromBody[v] + '}', this.globalVars.getVar(varsFromBody[v]));
-        }
-    }
-
-    body.innerHTML = bodyContent;
+    this.setFromCodeParts(document.body);
+    this.setFromCodeParts(document.head);
 }
 
 render = new Render();
