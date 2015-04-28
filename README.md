@@ -11,14 +11,14 @@ If I don't have what to do, MAYBE I develop more features for it.
 
 ##Example
 ```js
-render
+Render
     .global()
         .setVar('title', 'My page')
     .element('user')
         .setVar('name', 'Gabriel')
         .setVar('age',  16)
     .element('status')
-        .setVar('status', 'Online')
+        .setVar('status', {name: 'Online', code: 1})
     .render();
 ```
 
@@ -33,7 +33,7 @@ And the HTML
 </div>
 
 <div id="status">
-    ${status}
+    ${status.name}
 </div>
 ```
 
@@ -43,14 +43,14 @@ Result:
 Gabriel, 16
 Online
 ```
-
+## - [Live Example](http://jsfiddle.net/GabrielJMJ/ss9b116r/)
 ### Using foreach
 ```js
-render
+Render
     .element('your-websites')
         .setVar('websites', [
-            {name: {company: 'Facebook Inc.'}},
-            {name: {company: 'GitHub'}}
+            {name: 'Facebook'},
+            {name: 'GitHub'}
         ])
     .render();
 ```
@@ -58,13 +58,13 @@ HTML:
 ```html
 <div id="your-websites">
     $foreach(websites as website){
-        <li>${website.company}
+        <li>${website.name}
     }
 </div>
 ```
 Result:
 ```
-• Facebook Inc.
+• Facebook
 • GitHub
 ```
 
