@@ -10,7 +10,7 @@
  */
 var VarsCollection = function () {
     this.vars = [];
-}
+};
 
 /**
  * Sets a variable
@@ -20,7 +20,7 @@ var VarsCollection = function () {
  */
 VarsCollection.prototype.setVar = function (name, value) {
     this.vars[name] = value;
-}
+};
 
 /**
  * Check if the collection has a variable
@@ -35,7 +35,7 @@ VarsCollection.prototype.hasVar = function (name) {
      }
 
     return false;
-}
+};
 
 /**
  * Returns the collection variables
@@ -44,7 +44,7 @@ VarsCollection.prototype.hasVar = function (name) {
  */
 VarsCollection.prototype.getVars = function () {
     return this.vars;
-}
+};
 
 /**
  * Returns the value of some variable
@@ -55,7 +55,7 @@ VarsCollection.prototype.getVars = function () {
  */
 VarsCollection.prototype.getVar = function (name) {
     return this.vars[name];
-}
+};
 
 /**
  * An element is an HTML element generally
@@ -63,29 +63,29 @@ VarsCollection.prototype.getVar = function (name) {
  *
  * @param string id
  */
-var Element = function (id) {
+var RenderElement = function (id) {
     this.id = id;
-}
+};
 
 /**
  * Extend the vars collection
  */
-Element.prototype = new VarsCollection();
+RenderElement.prototype = new VarsCollection();
 
 /**
  * Returns the element ID
  *
  * @return string
  */
-Element.prototype.getId = function () {
+RenderElement.prototype.getId = function () {
     return this.id;
-}
+};
 
 /**
  * Pharser tools
  */
 var Parser = function () {
-}
+};
 
 /**
  * Returns the vars of certain code piece
@@ -98,12 +98,12 @@ Parser.prototype.getVarsFromContent = function (content) {
     var regexp = /\${([a-zA-Z0-9._\.]+)}/g;
     var result = [];
 
-    while ((vars = regexp.exec(content)) != null) {
+    while ((vars = regexp.exec(content)) !== null) {
         result.push(vars[1]);
     }
 
     return result;
-}
+};
 
 Parser.prototype.getListsFromContent = function (content) {
     var regexpForCatchListUsedVar = /\$foreach\(([a-zA-Z0-9. ]+)\)\{\s.*\s+\}/g;
@@ -126,7 +126,7 @@ Parser.prototype.getListsFromContent = function (content) {
     }
 
     return lists;
-}
+};
 
 /**
  * Parser for element
@@ -135,7 +135,7 @@ Parser.prototype.getListsFromContent = function (content) {
  */
 var ElementParser = function (element) {
     this.element = element;
-}
+};
 
 /**
  * Extends Parser
@@ -149,7 +149,7 @@ ElementParser.prototype = new Parser();
  */
 ElementParser.prototype.getLists = function () {
     return this.getListsFromContent(document.getElementById(this.element.getId()).innerHTML);
-}
+};
 
 /**
  * Returns all variables of certain element according to it ID
@@ -158,7 +158,7 @@ ElementParser.prototype.getLists = function () {
  */
 ElementParser.prototype.getVars = function () {
     return this.getVarsFromContent(document.getElementById(this.element.getId()).innerHTML);
-}
+};
 
 
 /**
@@ -167,7 +167,7 @@ ElementParser.prototype.getVars = function () {
 var Render = function () {
     this.elements = [];
     this.globalVars = new VarsCollection();
-}
+};
 
 /**
  * Indicates an element to work, setting variables
@@ -177,12 +177,12 @@ var Render = function () {
  * @return Render
  */
 Render.prototype.element = function (id) {
-    this.elements.push(new Element(id));
+    this.elements.push(new RenderElement(id));
     this.currentElement = id;
     this.currentGlobal = false;
 
     return this;
-}
+};
 
 /**
  * Sets something for all file
@@ -193,7 +193,7 @@ Render.prototype.global = function () {
     this.currentGlobal = true;
 
     return this;
-}
+};
 
 /**
  * Sets a variable for the element wich are working on
@@ -216,7 +216,7 @@ Render.prototype.setVar = function (name, value) {
     }
 
     return this;
-}
+};
 
 /**
  * Returns the value of some variable of an element
@@ -232,15 +232,17 @@ Render.prototype.getVar = function (elementId, varName) {
             return this.elements[k].getVar(varName);
         }
     }
-}
+};
 
 Render.prototype.setFromCodeParts = function (parser, part) {
     var partContent = part.innerHTML;
     var varsFromPart = parser.getVarsFromContent(partContent);
     var lists = parser.getListsFromContent(partContent);
 
-    for (list in lists) {
-        partContent = this.getListContent(lists[list]);
+    for (var list in lists) {
+        if (typeof lists[list] !== 'undefined') {
+                partContent = this.getListContent(lists[list]);
+        }
     }
     
     part.innerHTML = partContent;
@@ -252,17 +254,17 @@ Render.prototype.setFromCodeParts = function (parser, part) {
     }
 
     part.innerHTML = partContent;
-}
+};
 
 Render.prototype.getListContent = function (parser, list, element, content) {
     var contentVars = parser.getVarsFromContent(list.content);
-
+    var currentContent = [];
+  
     for (var y in element.getVars()) {
         if (list.array === y) {
             var listArr = this.getVar(element.getId(), list.array);
             var cContent = list.content;
             var currentVar = list.var;
-            var currentContent = [];
 
             for (var i = 0, length = contentVars.length; i < length; i++) {
                 if (contentVars[i].split('.')[0] == currentVar) {
@@ -272,7 +274,9 @@ Render.prototype.getListContent = function (parser, list, element, content) {
                         var toReplace = listArr[n];
 
                         for (var obj in realObj) {
-                            toReplace = toReplace[realObj[obj]];
+                            if (typeof realObj[obj] !== 'undefined') {
+                                    toReplace = toReplace[realObj[obj]];
+                            }
                         }
                         
                         if (typeof currentContent[n] !== 'undefined') {
@@ -293,49 +297,56 @@ Render.prototype.getListContent = function (parser, list, element, content) {
     }
 
     return content.replace(list.complete, currentContent.join(''));
-}
+};
 
 /**
  * Renders the variables, changes their values on browser
  */
 Render.prototype.render = function () {
     for (var k in this.elements) {
-        var element = this.elements[k];
-        var elparser = new ElementParser(element);
-        var lists   = elparser.getLists(element.getId());
-        var el      = document.getElementById(element.getId());
-        var content = el.innerHTML;
-        var contentList = [];
-
-        for (var l in lists) {
-            content = this.getListContent(elparser, lists[l], element, content);
-        }
-
-        var vars = elparser.getVarsFromContent(content);
-
-        for (var y in vars) {
-            var varParts = vars[y].split('.');
-            var varName = varParts[0];
-            varParts.splice(0, 1);
-            var toReplace = element.getVar(varName);
-
-            if (element.hasVar(varName)){
-                if (varParts.length && typeof element.getVar(varName) == 'object') {
-                    for (var v in varParts) {
-                        toReplace = toReplace[varParts[v]];
-                    }
+        if (typeof this.elements[k] !== 'undefined') {
+            var element = this.elements[k];
+            var elparser = new ElementParser(element);
+            var lists   = elparser.getLists(element.getId());
+            var el      = document.getElementById(element.getId());
+            var content = el.innerHTML;
+    
+            for (var l in lists) {
+                if (typeof lists[l] !== 'undefined') {
+                    content = this.getListContent(elparser, lists[l], element, content);
                 }
-                
-                content = content.replace('${' + vars[y] + '}', toReplace);
             }
+    
+            var vars = elparser.getVarsFromContent(content);
+    
+            for (var y in vars) {
+                if (typeof vars[y] !== 'undefined') {
+                  var varParts = vars[y].split('.');
+                  var varName = varParts[0];
+                  varParts.splice(0, 1);
+                  var toReplace = element.getVar(varName);
+      
+                  if (element.hasVar(varName)){
+                      if (varParts.length && typeof element.getVar(varName) == 'object') {
+                          for (var v in varParts) {
+                              if (typeof varParts[v] !== 'undefined') {
+                                  toReplace = toReplace[varParts[v]];
+                              }
+                          }
+                      }
+                      
+                      content = content.replace('${' + vars[y] + '}', toReplace);
+                  }
+                }
+            }
+    
+            el.innerHTML = content;
         }
-
-        el.innerHTML = content;
     }
 
     var parser = new Parser();
     this.setFromCodeParts(parser, document.body);
     this.setFromCodeParts(parser, document.head);
-}
+};
 
 Render = new Render();
