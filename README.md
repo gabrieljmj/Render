@@ -6,7 +6,7 @@ If I don't have what to do, MAYBE I develop more features for it.
 
 ## Including
 ```html
-<script src="https://cdn.rawgit.com/GabrielJMJ/Render/master/src/render.min.js"></script>
+<script src="render.min.js"></script>
 ```
 
 ##Example
