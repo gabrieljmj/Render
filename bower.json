@@ -1,0 +1,21 @@
+{
+  "name": "Render",
+  "version": "0.0.1",
+  "homepage": "https://github.com/GabrielJMJ/Render",
+  "authors": [
+    "Gabriel Jacinto <gamjj74@hotmail.com>"
+  ],
+  "description": "Very simple template engine. Developed just for fun.",
+  "main": "src/render.js",
+  "keywords": [
+    "render"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
